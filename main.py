@@ -1,12 +1,13 @@
-from fastmcp import MCP
+from fastmcp import FastMCP
 import os
 import aiosqlite
 from db import DB_PATH, init_db
 CATEGORIES_PATH = os.path.join(os.path.dirname(__file__), "categories.json")
 
 
-init_db()
-mcp = MCP()
+mcp = FastMCP(
+    name="Expense Tracker"
+)
 
 @mcp.tool()
 async def add_expense(date, amount, category, subcategory="", note=""):  # Changed: added async
@@ -98,5 +99,5 @@ def categories():
 
 # Start the server
 if __name__ == "__main__":
-    mcp.run(transport="http", host="0.0.0.0", port=8000)
-    # mcp.run()
+    init_db()
+    mcp.run()  # Uses stdio transport by default for MCP integration
