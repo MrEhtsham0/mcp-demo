@@ -46,6 +46,8 @@ async def get_all_expenses(session: AsyncSession = Depends(get_async_session)):
             raise HTTPException(status_code=400, detail=result["message"])
         
         return result
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

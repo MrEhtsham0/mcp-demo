@@ -1,21 +1,32 @@
 version: "3.8"
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: expense_tracker_mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: expense_tracker
-      MYSQL_USER: expense_user
-      MYSQL_PASSWORD: expense_password
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    command: --default-authentication-plugin=mysql_native_password
+  # MySQL service commented out - using AWS RDS instead
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: expense_tracker_mysql
+  #   restart: unless-stopped
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: rootpassword
+  #     MYSQL_DATABASE: expense_tracker
+  #     MYSQL_USER: expense_user
+  #     MYSQL_PASSWORD: expense_password
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  #   command: --default-authentication-plugin=mysql_native_password
 
-volumes:
-  mysql_data:
+  # Optional: Add your FastAPI app service if needed
+  # app:
+  #   build: .
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - MYSQL_HOST=expense-tracker-db.cx0aeuk0edcm.eu-north-1.rds.amazonaws.com
+  #     - MYSQL_USER=expense_tracker
+  #     - MYSQL_PASSWORD=expense-tracker-db
+  #     - MYSQL_DATABASE=expense_tracker
+# volumes:
+#   mysql_data:
