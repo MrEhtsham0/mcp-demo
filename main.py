@@ -1,76 +1,42 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from src.routes.expense_route import expense_router
 from fastmcp import FastMCP
+import json
 import os
-import aiosqlite
-from db import DB_PATH, init_db
-CATEGORIES_PATH = os.path.join(os.path.dirname(__file__), "categories.json")
 
-
-mcp = FastMCP(
-    name="Expense Tracker"
+# Create FastAPI app
+app = FastAPI(
+    title="Expense Tracker API",
+    description="A REST API for managing expenses with MCP integration",
+    version="1.0.0"
 )
 
-@mcp.tool()
-async def add_expense(date, amount, category, subcategory="", note=""):  # Changed: added async
-    '''Add a new expense entry to the database.'''
-    try:
-        async with aiosqlite.connect(DB_PATH) as c:  # Changed: added async
-            cur = await c.execute(  # Changed: added await
-                "INSERT INTO expenses(date, amount, category, subcategory, note) VALUES (?,?,?,?,?)",
-                (date, amount, category, subcategory, note)
-            )
-            expense_id = cur.lastrowid
-            await c.commit()  # Changed: added await
-            return {"status": "success", "id": expense_id, "message": "Expense added successfully"}
-    except Exception as e:  # Changed: simplified exception handling
-        if "readonly" in str(e).lower():
-            return {"status": "error", "message": "Database is in read-only mode. Check file permissions."}
-        return {"status": "error", "message": f"Database error: {str(e)}"}
-    
-@mcp.tool()
-async def list_expenses(start_date, end_date):  # Changed: added async
-    '''List expense entries within an inclusive date range.'''
-    try:
-        async with aiosqlite.connect(DB_PATH) as c:  # Changed: added async
-            cur = await c.execute(  # Changed: added await
-                """
-                SELECT id, date, amount, category, subcategory, note
-                FROM expenses
-                WHERE date BETWEEN ? AND ?
-                ORDER BY date DESC, id DESC
-                """,
-                (start_date, end_date)
-            )
-            cols = [d[0] for d in cur.description]
-            return [dict(zip(cols, r)) for r in await cur.fetchall()]  # Changed: added await
-    except Exception as e:
-        return {"status": "error", "message": f"Error listing expenses: {str(e)}"}
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@mcp.tool()
-async def summarize(start_date, end_date, category=None):  # Changed: added async
-    '''Summarize expenses by category within an inclusive date range.'''
-    try:
-        async with aiosqlite.connect(DB_PATH) as c:  # Changed: added async
-            query = """
-                SELECT category, SUM(amount) AS total_amount, COUNT(*) as count
-                FROM expenses
-                WHERE date BETWEEN ? AND ?
-            """
-            params = [start_date, end_date]
+# Include the expense router
+app.include_router(expense_router, prefix="/api")
 
-            if category:
-                query += " AND category = ?"
-                params.append(category)
+# API Routes
+@app.get("/")
+async def root():
+    """Root endpoint"""
+    return {"message": "Expense Tracker API", "version": "1.0.0"}
 
-            query += " GROUP BY category ORDER BY total_amount DESC"
+# Convert FastAPI app to MCP server
+mcp = FastMCP.from_fastapi(app=app)
 
-            cur = await c.execute(query, params)  # Changed: added await
-            cols = [d[0] for d in cur.description]
-            return [dict(zip(cols, r)) for r in await cur.fetchall()]  # Changed: added await
-    except Exception as e:
-        return {"status": "error", "message": f"Error summarizing expenses: {str(e)}"}
-
-@mcp.resource("expense:///categories", mime_type="application/json")  # Changed: expense:// → expense:///
+# Add MCP Resources
+@mcp.resource("expense:///categories", mime_type="application/json")
 def categories():
+    """Get available expense categories"""
     try:
         # Provide default categories if file doesn't exist
         default_categories = {
@@ -88,16 +54,14 @@ def categories():
             ]
         }
         
+        categories_path = os.path.join(os.path.dirname(__file__), "categories.json")
         try:
-            with open(CATEGORIES_PATH, "r", encoding="utf-8") as f:
+            with open(categories_path, "r", encoding="utf-8") as f:
                 return f.read()
         except FileNotFoundError:
-            import json
             return json.dumps(default_categories, indent=2)
     except Exception as e:
         return f'{{"error": "Could not load categories: {str(e)}"}}'
 
-# Start the server
-if __name__ == "__main__":
-    init_db()
-    mcp.run()  # Uses stdio transport by default for MCP integration
+# Mount MCP to FastAPI app
+app.mount("/mcp", mcp.from_fastapi(app=app))
