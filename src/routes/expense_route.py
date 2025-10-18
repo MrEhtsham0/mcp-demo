@@ -11,7 +11,7 @@ expense_router = APIRouter()
 
 @expense_router.post("/expenses/", response_model=ExpenseResponse)
 async def create_expense(expense: ExpenseCreate, session: AsyncSession = Depends(get_async_session)):
-    """Create a new expense"""
+    """This is the endpoint to create a new expense"""
     try:
         result = await ExpenseService.create_expense(
             date=expense.date,
