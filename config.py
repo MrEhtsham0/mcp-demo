@@ -1,39 +1,63 @@
 from pydantic_settings import BaseSettings
-import os
-
+from pydantic import SecretStr
+from typing import List
 class Settings(BaseSettings):
-    # AWS RDS MySQL Configuration
-    mysql_host: str = "expense-tracker-db.cx0aeuk0edcm.eu-north-1.rds.amazonaws.com"
-    mysql_port: int = 3306
-    mysql_user: str = "expense_tracker"
-    mysql_password: str = "expense-tracker-db"
-    mysql_database: str = "expense_tracker"
-    categories_path: str = os.path.join(os.path.dirname(__file__), "..", "..", "categories.json")
+    """Application settings"""
     
-    # Previous Docker MySQL Configuration (commented out)
-    # mysql_host: str = "localhost"
-    # mysql_port: int = 3306
-    # mysql_user: str = "expense_user"
-    # mysql_password: str = "expense_password"
-    # mysql_database: str = "expense_tracker"
-
-    
-    # Application Settings
-    app_name: str = "Expense Tracker MCP Server"
+    # Application
+    app_name: str = "Expense Tracker AI"
+    app_version: str = "1.0.0"
     debug: bool = False
-
-    class Config:
+    
+    # API Configuration
+    api_v1_str: str = "/api/v1"
+    project_name: str = "Expense Tracker"
+    
+    # Database Configuration (Local MySQL by default)
+    mysql_host: str = "localhost"
+    mysql_port: int = 3306
+    mysql_user: str = "expense_user"
+    mysql_password: str = "expense_password"
+    mysql_database: str = "expense_tracker"
+    
+    # Database Pool Settings
+    database_pool_size: int = 10
+    database_max_overflow: int = 20
+    database_pool_timeout: int = 30
+    database_pool_recycle: int = 3600
+    
+    # Redis Configuration
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+    redis_password: str = ""
+    redis_db: int = 0
+    redis_max_connections: int = 10
+    
+    # Cache Settings
+    cache_default_ttl: int = 300  # 5 minutes
+    cache_expense_ttl: int = 600  # 10 minutes
+    cache_summary_ttl: int = 1800  # 30 minutes
+    
+    # External Services
+    openai_api_key: SecretStr = SecretStr("")
+    backend_cors_origins: List[str] = ["*"]
+    class ConfigDict:
         env_file = ".env"
         case_sensitive = False
-
-    @property
-    def database_url(self) -> str:
-        """Get MySQL database URL for AWS RDS"""
-        return f"mysql+pymysql://{self.mysql_user}:{self.mysql_password}@{self.mysql_host}:{self.mysql_port}/{self.mysql_database}"
+        frozen = True
+        extra = "allow"
     
     @property
     def async_database_url(self) -> str:
-        """Get async MySQL database URL for AWS RDS"""
+        """Get async MySQL database URL"""
         return f"mysql+aiomysql://{self.mysql_user}:{self.mysql_password}@{self.mysql_host}:{self.mysql_port}/{self.mysql_database}"
+    
+    @property
+    def redis_url(self) -> str:
+        """Get Redis connection URL"""
+        if self.redis_password:
+            return f"redis://:{self.redis_password}@{self.redis_host}:{self.redis_port}/{self.redis_db}"
+        return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
 
+# Global settings instance
 settings = Settings()

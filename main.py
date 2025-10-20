@@ -1,67 +1,51 @@
+"""
+FastAPI application with MCP integration
+"""
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.routes.expense_route import expense_router
 from fastmcp import FastMCP
-import json
-import os
+
+from config import settings
+from app.core.database import init_db_async
+from app.core.redis_cache import redis_cache
+from app.routes.expenses import router as expenses_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application lifespan events"""
+    # Startup
+    await init_db_async()
+    await redis_cache.connect()
+    yield
+    # Shutdown
+    await redis_cache.disconnect()
+
 
 # Create FastAPI app
 app = FastAPI(
-    title="Expense Tracker API",
+    title=settings.app_name,
     description="A REST API for managing expenses with MCP integration",
-    version="1.0.0"
+    version=settings.app_version,
+    lifespan=lifespan
 )
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.backend_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include the expense router
-app.include_router(expense_router, prefix="/api")
+# Include API router
+app.include_router(expenses_router, prefix=settings.api_v1_str)
 
-# API Routes
-@app.get("/")
-async def root():
-    """Root endpoint"""
-    return {"message": "Expense Tracker API", "version": "1.0.0"}
+# Root endpoint
 
 # Convert FastAPI app to MCP server
 mcp = FastMCP.from_fastapi(app=app)
 
-# Add MCP Resources
-@mcp.resource("expense:///categories", mime_type="application/json")
-def categories():
-    """Get available expense categories"""
-    try:
-        # Provide default categories if file doesn't exist
-        default_categories = {
-            "categories": [
-                "Food & Dining",
-                "Transportation",
-                "Shopping",
-                "Entertainment",
-                "Bills & Utilities",
-                "Healthcare",
-                "Travel",
-                "Education",
-                "Business",
-                "Other"
-            ]
-        }
-        
-        categories_path = os.path.join(os.path.dirname(__file__), "categories.json")
-        try:
-            with open(categories_path, "r", encoding="utf-8") as f:
-                return f.read()
-        except FileNotFoundError:
-            return json.dumps(default_categories, indent=2)
-    except Exception as e:
-        return f'{{"error": "Could not load categories: {str(e)}"}}'
-
-# Mount MCP to FastAPI app
-app.mount("/mcp", mcp.from_fastapi(app=app))
+# Add MCP Resource
