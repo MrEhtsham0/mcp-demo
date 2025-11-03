@@ -144,3 +144,44 @@ MIT License
 ```
 docker exec -it expense_tracker_mysql mysql -u root -p
 ```
+
+## Advance Backend Technique
+
+```
+1=>Priority Implementation Order
+2=>Observability (Logging, Metrics, Tracing) - Critical for production
+3=>Security (Authentication, Input validation) - Security first
+4=>Background Tasks - For scalability
+5=>Event-Driven Architecture - For loose coupling
+6=>Advanced Caching - For performance
+7=>Database Optimization - For efficiency
+8=>Circuit breaker for External sources.
+9=>Background Task Processing
+
+```
+
+## Advance Caching Techniques
+
+```
+# Multi-level caching
+class CacheStrategy:
+    # L1: In-memory cache
+    # L2: Redis cache
+    # L3: Database
+
+    async def get_with_fallback(self, key: str):
+        # Try L1 -> L2 -> L3
+        pass
+
+# Cache warming
+@celery_app.task
+async def warm_cache():
+    # Pre-populate frequently accessed data
+    pass
+
+# Cache invalidation patterns
+class CacheInvalidator:
+    async def invalidate_pattern(self, pattern: str):
+        # Smart invalidation based on patterns
+        pass
+```

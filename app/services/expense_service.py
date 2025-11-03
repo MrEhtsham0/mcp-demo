@@ -1,4 +1,5 @@
 from sqlmodel import select
+from sqlalchemy.sql import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Dict, Any, Optional
 from app.models.expense import Expense
@@ -40,12 +41,23 @@ class ExpenseService:
             await self.db.rollback()
             return {"status": "error", "message": f"Database error: {str(e)}"}
     
+    def get_expenses_by_date_range_query(
+        self,
+        start_date: str, 
+        end_date: str
+    ) -> Select:
+        """Get query statement for expenses within a date range (for pagination)"""
+        return select(Expense).where(
+            Expense.date >= start_date,
+            Expense.date <= end_date
+        ).order_by(Expense.date.desc(), Expense.id.desc())
+    
     async def get_expenses_by_date_range(
         self,
         start_date: str, 
         end_date: str
     ) -> List[Dict[str, Any]]:
-        """Get expenses within a date range with proper transaction handling"""
+        """Get expenses within a date range with proper transaction handling (non-paginated, kept for backward compatibility)"""
         try:
             statement = select(Expense).where(
                 Expense.date >= start_date,
@@ -69,8 +81,12 @@ class ExpenseService:
         except Exception as e:
             return {"status": "error", "message": f"Error listing expenses: {str(e)}"}
     
+    def get_all_expenses_query(self) -> Select:
+        """Get query statement for all expenses (for pagination)"""
+        return select(Expense).order_by(Expense.date.desc(), Expense.id.desc())
+    
     async def get_all_expenses(self) -> List[Dict[str, Any]]:
-        """Get all expenses with proper transaction handling"""
+        """Get all expenses with proper transaction handling (non-paginated, kept for backward compatibility)"""
         try:
             statement = select(Expense).order_by(Expense.date.desc(), Expense.id.desc())
             result = await self.db.execute(statement)

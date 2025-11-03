@@ -6,10 +6,10 @@ services:
     container_name: expense_tracker_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: expense-tracker
       MYSQL_DATABASE: expense_tracker
-      MYSQL_USER: expense_user
-      MYSQL_PASSWORD: expense_password
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: expense-tracker
     ports:
       - "3306:3306"
     volumes:
