@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     
     # External Services
     openai_api_key: SecretStr = SecretStr("")
+    tavily_api_key: SecretStr = SecretStr("")
     backend_cors_origins: List[str] = ["*"]
     class ConfigDict:
         env_file = ".env"
