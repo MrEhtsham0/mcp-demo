@@ -11,11 +11,11 @@ from app.schemas.expense import ExpenseCreate, ExpenseResponse, ExpenseSummary
 from app.services.expense_service import ExpenseService
 from app.routes.dependencies import get_expense_service
 from app.models.expense import Expense
-from app.core.redis_cache import (
+from config import settings
+from app.db.redis_cache import (
     redis_cache, 
     get_expense_key, 
     get_expense_summary_key,
-    settings
 )
 
 # Create limiter instance

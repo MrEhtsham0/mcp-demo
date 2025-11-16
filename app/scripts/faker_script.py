@@ -9,12 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 # Import your app modules
-from app.core.database import async_engine
+from app.db.database import async_engine
 from app.models.expense import Expense
 
 # Optional imports — if you have Redis cache implemented
 try:
-    from app.core.redis_cache import redis_cache, get_expense_pattern_key, get_expenses_pattern_key
+    from app.db.redis_cache import redis_cache, get_expense_pattern_key, get_expenses_pattern_key
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False

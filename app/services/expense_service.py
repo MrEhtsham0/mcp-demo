@@ -3,7 +3,7 @@ from sqlalchemy.sql import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Dict, Any, Optional
 from app.models.expense import Expense
-from app.core.redis_cache import redis_cache, get_expense_pattern_key, get_expenses_pattern_key
+from app.db.redis_cache import redis_cache, get_expense_pattern_key, get_expenses_pattern_key
 
 class ExpenseService:
     """Service class for expense operations"""

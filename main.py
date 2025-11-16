@@ -1,48 +1,66 @@
 """
 FastAPI application with MCP integration
 """
+
+import tomllib
+import uvicorn
+from pathlib import Path
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+
 from fastapi_pagination import add_pagination
-# from fastmcp import FastMCP
 
 from config import settings
-from app.core.database import init_db_async
-from app.core.redis_cache import redis_cache
+from app.db.database import init_db_async
+from app.db.redis_cache import redis_cache
 from app.routes.expenses import router as expenses_router
 
 
+# -------------------------------------------------------------------
+# Lifespan events
+# -------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifespan events"""
-    # Startup
+
+    # Initialize database
     await init_db_async()
+    
+    # Connect to Redis
     await redis_cache.connect()
+    
     yield
+    
     # Shutdown
     await redis_cache.disconnect()
 
 
-# Create rate limiter
+# -------------------------------------------------------------------
+# Rate limiter
+# -------------------------------------------------------------------
 limiter = Limiter(key_func=get_remote_address)
 
-# Create FastAPI app
+# -------------------------------------------------------------------
+# FastAPI App
+# -------------------------------------------------------------------
 app = FastAPI(
     title=settings.app_name,
-    description="A REST API for managing expenses with MCP integration",
+    description="A REST API for managing expenses with MCP integration and observability",
     version=settings.app_version,
     lifespan=lifespan
 )
 
-# Add rate limiting
+# Add rate limiting handler
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Add CORS middleware
+# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.backend_cors_origins,
@@ -51,27 +69,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API router
+# Include API Routers
 app.include_router(expenses_router, prefix=settings.api_v1_str)
 
-# Add pagination support
+# Add Pagination
 add_pagination(app)
 
-# Root endpoint
 
-# Convert FastAPI app to MCP server
-# mcp = FastMCP.from_fastapi(app=app)
+# -------------------------------------------------------------------
+# Read PyProject Settings + Run Uvicorn
+# -------------------------------------------------------------------
+if __name__ == "__main__":
+    config = tomllib.loads(Path("pyproject.toml").read_text())
+    fastapi_config = config["tool"]["fastapi"]
 
-# Add MCP Resource
-
-"""
-1=>Caching using redis
-2=>Rate limiting using slowapi
-3=>Logging using logging
-4=>Error handling using fastapi
-5=>Authentication using fastapi
-6=>Authorization using fastapi
-7=>Database using sqlmodel
-8=>Redis using aioredis
-9=>MCP using fastmcp
-"""
+    uvicorn.run(
+        fastapi_config["entrypoint"],
+        host=fastapi_config.get("host", "127.0.0.1"),
+        port=fastapi_config.get("port", 8001),
+        reload=fastapi_config.get("reload", False),
+        workers=fastapi_config.get("workers", 2),
+    )
