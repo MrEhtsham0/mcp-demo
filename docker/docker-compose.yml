@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: expense_tracker_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: expense-tracker
+      MYSQL_DATABASE: expense_tracker
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: expense-tracker
+    ports:
+      - "3306:3306"
+    volumes:
+      - expense_tracker_mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+
+  redis:
+    image: redis:7-alpine
+    container_name: expense_tracker_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - expense_tracker_redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+volumes:
+  expense_tracker_mysql_data:
+  expense_tracker_redis_data:

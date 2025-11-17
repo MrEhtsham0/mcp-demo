@@ -61,6 +61,11 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
+# SQLite databases (LangGraph checkpoints, etc.)
+*.db
+*.db-shm
+*.db-wal
+
 # Flask stuff:
 instance/
 .webassets-cache
@@ -138,3 +143,8 @@ dmypy.json
 cython_debug/
 
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Python
+
+app/scripts/faker_script.py
+app/notebooks/langchain_course.ipynb
+app/notebooks/langgraph_course.ipynb
+app/notebooks/langgraph_course.ipynb

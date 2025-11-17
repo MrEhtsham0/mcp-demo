@@ -1,150 +1,187 @@
-# Expense Tracker
+# Expense Tracker AI
 
-A comprehensive expense tracking application with both MCP (Model Context Protocol) server and FastAPI REST API, supporting both SQLite and MySQL databases.
+A modern expense tracking application built with FastAPI, LangGraph, MCP (Model Context Protocol), and Streamlit.
 
-## Project Structure
+## 🏗️ Architecture
 
 ```
-mcp-demo/
-├── src/
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── mcp_server.py          # MCP server implementation
-│   │   └── fastapi_app.py         # FastAPI application
-│   ├── database/
-│   │   ├── __init__.py
-│   │   └── db.py                  # Database configuration and connection
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── expense.py             # Expense data model
-│   └── services/
-│       ├── __init__.py
-│       └── expense_service.py     # Business logic for expenses
-├── config.py                      # Application configuration
-├── main.py                        # MCP server entry point
-├── fastapi_server.py              # FastAPI server entry point
-├── combined_server.py             # Combined MCP + FastAPI server
-├── pyproject.toml                 # Project dependencies
-└── env_template.txt               # Environment variables template
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Streamlit UI  │    │  LangGraph AI   │    │   FastAPI MCP   │
+│                 │◄──►│     Agent       │◄──►│     Server      │
+│  User Interface │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    AWS RDS MySQL Database                      │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## Features
+## 🚀 Quick Start
 
-- **MCP Integration**: Full Model Context Protocol server implementation
-- **FastAPI REST API**: Complete REST API with automatic documentation
-- **Database Support**: Both SQLite (default) and MySQL support
-- **ORM Queries**: SQLModel with Pydantic for type validation
-- **Modular Architecture**: Clean separation of concerns
-- **Docker Support**: MySQL running in Docker container
+### 1. Install Dependencies
 
-## Setup
+```bash
+pip install -e .
+```
 
-1. **Install Dependencies**:
+### 2. Set Environment Variables
 
-   ```bash
-   pip install -e .
-   ```
-
-2. **Configure Environment**:
-
-   ```bash
-   cp env_template.txt .env
-   # Edit .env with your database settings
-   ```
-
-3. **Run the Servers**:
-
-   **MCP Server Only**:
-
-   ```bash
-   python main.py
-   ```
-
-   **FastAPI Server Only**:
-
-   ```bash
-   python fastapi_server.py
-   ```
-
-   **Both Servers**:
-
-   ```bash
-   python combined_server.py
-   ```
-
-## Database Configuration
-
-### SQLite (Default)
-
-The server uses SQLite by default. No additional setup required.
-
-### MySQL (Optional)
-
-To use MySQL, update your `.env` file:
+Create a `.env` file:
 
 ```env
-MYSQL_HOST=localhost
+OPENAI_API_KEY=your_openai_api_key_here
+MYSQL_HOST=expense-tracker-db.cx0aeuk0edcm.eu-north-1.rds.amazonaws.com
 MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=your_password
+MYSQL_USER=expense_tracker
+MYSQL_PASSWORD=expense-tracker-db
 MYSQL_DATABASE=expense_tracker
 ```
 
-## MCP Tools
-
-- `add_expense`: Add a new expense entry
-- `list_expenses`: List expenses within a date range
-- `list_all_expenses`: List all expenses
-- `summarize`: Summarize expenses by category
-
-## MCP Resources
-
-- `expense:///categories`: Get available expense categories
-
-## FastAPI Endpoints
-
-### Base URL
-
-- **Development**: `http://localhost:8000`
-- **API Documentation**: `http://localhost:8000/docs` (Swagger UI)
-- **Alternative Docs**: `http://localhost:8000/redoc` (ReDoc)
-
-### Endpoints
-
-#### Expenses
-
-- `POST /expenses/` - Create a new expense
-- `GET /expenses/` - Get all expenses
-- `GET /expenses/range/` - Get expenses within date range
-- `GET /expenses/summary/` - Get expense summary by category
-- `GET /expenses/{expense_id}` - Get specific expense
-- `PUT /expenses/{expense_id}` - Update expense
-- `DELETE /expenses/{expense_id}` - Delete expense
-
-#### Categories
-
-- `GET /categories/` - Get available expense categories
-
-### Example Usage
+### 3. Start Services
 
 ```bash
-# Create an expense
-curl -X POST "http://localhost:8000/expenses/" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "date": "2025-10-15",
-    "amount": 25.50,
-    "category": "Food & Dining",
-    "subcategory": "Lunch",
-    "note": "Lunch at restaurant"
-  }'
+# Start both FastAPI and Streamlit
+python main.py
 
-# Get all expenses
-curl -X GET "http://localhost:8000/expenses/"
+# Start only FastAPI
+python main.py --mode api
 
-# Get expenses by date range
-curl -X GET "http://localhost:8000/expenses/range/?start_date=2025-10-01&end_date=2025-10-31"
+# Start only Streamlit
+python main.py --mode frontend
+```
 
-# Get expense summary
-curl -X GET "http://localhost:8000/expenses/summary/?start_date=2025-10-01&end_date=2025-10-31"
+## 🔧 Services
+
+### FastAPI MCP Server (Port 8000)
+
+- **Main API**: http://localhost:8000
+- **MCP Endpoint**: http://localhost:8000/mcp
+- **API Documentation**: http://localhost:8000/docs
+
+### Streamlit App (Port 8501)
+
+- **URL**: http://localhost:8501
+- **Features**: Chat interface with AI agent
+
+## 🤖 AI Agent Features
+
+The LangGraph agent can help you with:
+
+- **Adding Expenses**: "Add a $25 lunch expense for today"
+- **Viewing Data**: "Show me all expenses from last month"
+- **Summaries**: "Give me a breakdown by category"
+- **Searching**: "Find all food expenses over $50"
+
+## 📁 Project Structure
+
+```
+mcp-demo/
+├── app/                          # Main application
+│   ├── api/                      # API layer
+│   │   ├── v1/endpoints/         # API endpoints
+│   │   └── dependencies.py       # FastAPI dependencies
+│   ├── core/                     # Core configuration
+│   │   ├── config.py            # Settings
+│   │   └── database.py          # Database connection
+│   ├── models/                   # Database models
+│   ├── schemas/                  # Pydantic schemas
+│   ├── services/                 # Business logic
+│   ├── agents/                   # AI agents
+│   └── app.py                    # FastAPI app
+├── frontend/
+│   └── streamlit_app.py         # Streamlit UI
+├── tests/                        # Test suite
+├── docker/                       # Docker configurations
+├── main.py                       # Main entry point
+└── pyproject.toml               # Dependencies
+```
+
+## 🧪 Testing
+
+```bash
+pytest tests/
+```
+
+## 🐳 Docker
+
+```bash
+# Build image
+docker build -f docker/Dockerfile -t expense-tracker .
+
+# Run with docker-compose
+docker-compose -f docker/docker-compose.yml up
+```
+
+## 📊 Database
+
+The application uses AWS RDS MySQL with the following schema:
+
+```sql
+CREATE TABLE expenses (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    date DATE NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    subcategory VARCHAR(100),
+    note TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+## 🔒 Security
+
+- Set up AWS RDS security groups to allow port 3306
+- Use environment variables for sensitive data
+- Validate all user inputs
+
+## 📄 License
+
+MIT License
+
+```
+docker exec -it expense_tracker_mysql mysql -u root -p
+```
+
+## Advance Backend Technique
+
+```
+1=>Priority Implementation Order
+2=>Observability (Logging, Metrics, Tracing) - Critical for production
+3=>Security (Authentication, Input validation) - Security first
+4=>Background Tasks - For scalability
+5=>Event-Driven Architecture - For loose coupling
+6=>Advanced Caching - For performance
+7=>Database Optimization - For efficiency
+8=>Circuit breaker for External sources.
+9=>Background Task Processing
+
+```
+
+## Advance Caching Techniques
+
+```
+# Multi-level caching
+class CacheStrategy:
+    # L1: In-memory cache
+    # L2: Redis cache
+    # L3: Database
+
+    async def get_with_fallback(self, key: str):
+        # Try L1 -> L2 -> L3
+        pass
+
+# Cache warming
+@celery_app.task
+async def warm_cache():
+    # Pre-populate frequently accessed data
+    pass
+
+# Cache invalidation patterns
+class CacheInvalidator:
+    async def invalidate_pattern(self, pattern: str):
+        # Smart invalidation based on patterns
+        pass
 ```
