@@ -4,13 +4,10 @@ FROM python:3.13-slim AS builder
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including graphviz for pygraphviz
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
-    graphviz \
-    graphviz-dev \
-    libgraphviz-dev \
-    pkg-config \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files
@@ -25,10 +22,8 @@ FROM python:3.13-slim AS runtime
 # Set working directory
 WORKDIR /app
 
-# Install runtime dependencies for graphviz
+# Install runtime dependencies
 RUN apt-get update && apt-get install -y \
-    graphviz \
-    libgraphviz4 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 

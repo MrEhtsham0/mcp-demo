@@ -1,0 +1,74 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pye
+*.pyd
+*.pkl
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# uv build cache
+.uv/
+.uv_cache/
+uv.lock.backup
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+*.whl
+
+# IDE folders
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.*
+*.env
+
+# Docker files to ignore
+Dockerfile.*
+docker-compose.*.yml
+
+# Git
+.git/
+.gitignore
+
+# Notebooks
+*.ipynb_checkpoints/
+
+# Node (if frontend exists in same repo)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Uploads / generated media
+media/
+uploads/
+staticfiles/
+
+# Cache folders
+.cache/
+*.cache/
+__cache__/
+
+# Project-specific
+data/
+tmp/
