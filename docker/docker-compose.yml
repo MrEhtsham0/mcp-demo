@@ -1,6 +1,33 @@
-version: "3.8"
-
 services:
+  app:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    container_name: expense_tracker_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=expense-tracker
+      - MYSQL_DATABASE=expense_tracker
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_MAX_CONNECTIONS=10
+      - CACHE_DEFAULT_TTL=300
+      - CACHE_EXPENSE_TTL=600
+      - CACHE_SUMMARY_TTL=1800
+    networks:
+      - expense_tracker_network
+
   mysql:
     image: mysql:8.0
     container_name: expense_tracker_mysql
@@ -15,6 +42,24 @@ services:
     volumes:
       - expense_tracker_mysql_data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-pexpense-tracker",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - expense_tracker_network
 
   redis:
     image: redis:7-alpine
@@ -25,7 +70,17 @@ services:
     volumes:
       - expense_tracker_redis_data:/data
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
-
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - expense_tracker_network
 volumes:
   expense_tracker_mysql_data:
   expense_tracker_redis_data:
+
+networks:
+  expense_tracker_network:
+    driver: bridge
