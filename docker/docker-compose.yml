@@ -5,59 +5,25 @@ services:
       dockerfile: docker/Dockerfile
     container_name: expense_tracker_app
     restart: unless-stopped
+    env_file:
+      - ../.env
     ports:
       - "8000:8000"
     depends_on:
-      mysql:
-        condition: service_healthy
       redis:
         condition: service_healthy
     environment:
-      - MYSQL_HOST=mysql
-      - MYSQL_PORT=3306
-      - MYSQL_USER=admin
-      - MYSQL_PASSWORD=expense-tracker
-      - MYSQL_DATABASE=expense_tracker
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_DB=0
-      - REDIS_MAX_CONNECTIONS=10
-      - CACHE_DEFAULT_TTL=300
-      - CACHE_EXPENSE_TTL=600
-      - CACHE_SUMMARY_TTL=1800
-    networks:
-      - expense_tracker_network
+      # Redis Environment
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_DB: "0"
+      REDIS_MAX_CONNECTIONS: "10"
 
-  mysql:
-    image: mysql:8.0
-    container_name: expense_tracker_mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: expense-tracker
-      MYSQL_DATABASE: expense_tracker
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: expense-tracker
-    ports:
-      - "3306:3306"
-    volumes:
-      - expense_tracker_mysql_data:/var/lib/mysql
-    command: --default-authentication-plugin=mysql_native_password
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-pexpense-tracker",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      # Cache Settings
+      CACHE_DEFAULT_TTL: "300"
+      CACHE_EXPENSE_TTL: "600"
+      CACHE_SUMMARY_TTL: "1800"
+
     networks:
       - expense_tracker_network
 
@@ -77,8 +43,8 @@ services:
       retries: 5
     networks:
       - expense_tracker_network
+
 volumes:
-  expense_tracker_mysql_data:
   expense_tracker_redis_data:
 
 networks:

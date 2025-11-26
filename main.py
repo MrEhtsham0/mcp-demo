@@ -20,6 +20,7 @@ from config import settings
 from app.db.database import init_db_async
 from app.db.redis_cache import redis_cache
 from app.routes.expenses import router as expenses_router
+from app.routes.upload_router import router as upload_file_to_s3
 
 
 # -------------------------------------------------------------------
@@ -71,6 +72,7 @@ app.add_middleware(
 
 # Include API Routers
 app.include_router(expenses_router, prefix=settings.api_v1_str)
+app.include_router(upload_file_to_s3, prefix=settings.api_v1_str)
 
 # Add Pagination
 add_pagination(app)
