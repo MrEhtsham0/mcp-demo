@@ -28,10 +28,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Test Docker image
+      - name: Test Docker image (no MySQL)
         run: |
           docker run -d --name test-app \
-            -e MYSQL_HOST=mysql \
             -e REDIS_HOST=redis \
             expense-tracker:${{ github.sha }}
           sleep 5
