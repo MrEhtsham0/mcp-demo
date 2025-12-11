@@ -36,6 +36,9 @@ dependencies = [
     "networkx>=3.5",
     "matplotlib>=3.10.7",
     "aioboto3>=15.5.0",
+    "langchain-huggingface>=1.0.0",
+    "langchain-ollama>=1.0.0",
+    "trustcall>=0.0.39",
 ]
 
 [tool.fastapi]
